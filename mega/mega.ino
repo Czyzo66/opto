@@ -32,12 +32,15 @@ void readFromConsole()
   while (Serial.available())
   {
     ch = Serial.read();
-    if(ctr == numChars)
+    if(ch != '\n' || ch != '\0')
     {
-      break;
+      if(ctr == numChars)
+      {
+        break;
+      }
+      chars[ctr] = ch;
+      ctr++;
     }
-    chars[ctr] = ch;
-    ctr++;
   }
   for(int i = 0; i < ctr; i++)
   {
