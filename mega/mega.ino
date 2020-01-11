@@ -21,8 +21,9 @@ void resetChars()
 {
   for(int i = 0; i < numChars; i++)
   {
-    chars[i] = eot;
+    chars[i] = 'a';
   }
+  chars[numChars-1] = eot;
 }
 
 void readFromConsole() 
