@@ -9,7 +9,7 @@ const int numChars = 64;
 char chars[numChars];
 
 void loop() {
-  resetChars();
+  //resetChars();
   readFromConsole();
   if(chars[0] != eot)
   {
@@ -34,11 +34,12 @@ void readFromConsole()
     ch = Serial.read();
     if(ch != '\n' || ch != '\0')
     {
-      if(ctr == numChars)
+      if(ctr == numChars-1)
       {
         break;
       }
       chars[ctr] = ch;
+      chars[ctr+1] = eot;
       ctr++;
     }
   }
