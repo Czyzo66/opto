@@ -1,15 +1,17 @@
 void setup() {
   // put your setup code here, to run once:
   pinMode(52,OUTPUT);
-  Serial.begin(115200);
+  Serial.begin(2000000);
 }
 
-const char eot = 0x4; //end of transmission
+const int del = 16;    //delay
+const char eot = 0x4;  //end of transmission
 const int numChars = 64;
 char chars[numChars];
 
 void loop() {
-  //resetChars();
+  //Serial.println(chars[0], HEX);
+  resetChars();
   readFromConsole();
   if(chars[0] != eot)
   {
@@ -21,34 +23,51 @@ void resetChars()
 {
   for(int i = 0; i < numChars; i++)
   {
-    chars[i] = 'a';
+    chars[i] = eot;
   }
   chars[numChars-1] = eot;
 }
 
 void readFromConsole() 
 {
+  if(Serial.available())
+  {
+    delay(3); //bez tego nie działa xD
+    readChars();
+  }
+  else
+  {
+    return;
+  }
+
+}
+
+void readChars()
+{
   byte ctr = 0;
   char ch;
   while (Serial.available())
   {
     ch = Serial.read();
-    if(ch != '\n' || ch != '\0')
+    if(ch != '\n')
     {
       if(ctr == numChars-1)
       {
+        //Serial.print("break\n");
         break;
       }
       chars[ctr] = ch;
-      chars[ctr+1] = eot;
       ctr++;
     }
   }
-  for(int i = 0; i < ctr; i++)
+  if(chars[0] != eot)
   {
-    Serial.print(chars[i]);
+    for(int i = 0; i < ctr; i++)
+    {
+      Serial.print(chars[i]);
+    }
+    Serial.print("\n");
   }
-  Serial.print('\n');
 }
 
 void sendBits()
@@ -66,12 +85,12 @@ void sendBits()
       if(chars[i] & (1 << j))
       {
         digitalWrite(52,HIGH);
-        delay(8);
+        delay(del);
       }
       else
       {
         digitalWrite(52,LOW);
-        delay(8);
+        delay(del);
       }
     }
     if(isEndReached)
@@ -83,9 +102,11 @@ void sendBits()
 
 void sendPadding()
 {
-  for(int i = 0; i < 8; i++)
+  for(int i = 0; i < 2; i++)
   {
     digitalWrite(52,HIGH);
-    delay(8);
+    delay(del);
+    digitalWrite(52,LOW);
+    delay(del);
   }
 }
