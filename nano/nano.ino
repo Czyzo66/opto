@@ -137,7 +137,6 @@ void printChars()
       Serial.print("\n");
       return;
     }
-    Serial.print(chars[i], HEX);
-    Serial.print(' ');
+    Serial.print(chars[i]);
   }
 }
