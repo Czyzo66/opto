@@ -1,138 +1,148 @@
 void setup() {
   // put your setup code here, to run once:
-  pinMode(2,INPUT);
+  pinMode(2, INPUT);
   Serial.begin(2000000);
 }
 
-const int del = 2;    //delay
-const int delMul = 8; //how many times larger is delay on transmitter
-const char eot = 0x4; //end of transmission
+const int del = 1;      //delay
+const int delMul = 4;   //how many times larger is delay on transmitter
+const char eot = 0x80;  //end of transmission
 const int numChars = 64;
+const int numBits = 8 * numChars;
 char chars[numChars];
+byte bits[numBits];
 
 void loop() {
-  if(paddingReceived())
+  if (paddingReceived())
   {
-    readChars();
+    readBits();
     printChars();
   }
 }
 
 bool paddingReceived()
 {
-  int counter = 0;
-  while(true)
+  while (true)
   {
-    if(digitalRead(2) == HIGH)
+    if (digitalRead(2) == HIGH)
     {
-      delay(1);
-      if(!receivedHigh())
+      delay(del * delMul);
+      if (digitalRead(2) == LOW)
       {
-        return false;      
-      }
-      if(!receivedLow())
-      {
-        return false;      
-      }
-      if(!receivedHigh())
-      {
-        Serial.print("High2\n");
-        return false;      
-      }
-      if(!receivedLow())
-      {
-        Serial.print("Low2\n");
-        return false;      
-      }
-      //Serial.print("Transmission:\n");
-      return true;
-    }
-  }
-}
-
-bool receivedLow()
-{
-  int counter = 0;
-  for(int i = 0; i < delMul; i++)
-  {
-    if(digitalRead(2) == LOW)
-    {
-      //Serial.print("L");
-      counter++;
-      delay(del);
-    }
-  }
-  if(counter < delMul-2)
-  {
-    return false;
-  }
-  return true;
-}
-
-bool receivedHigh()
-{
-  int counter = 0;
-  for(int i = 0; i < delMul; i++)
-  {
-    if(digitalRead(2) == HIGH)
-    {
-      //Serial.print("H");
-      counter++;
-      delay(del);
-    }
-  }
-  if(counter < delMul-2)
-  {
-    return false;
-  }
-  return true;
-}
-
-void readChars()
-{
-  char ch = 0;
-  int charCount = 0;
-  while(ch != eot) //end of transmission
-  {
-    for(int i = 0; i < 8; i++)
-    {
-      int counter = 0;
-      for(int j = 0; j < delMul; j++)
-      {
+        delay(del * delMul);
         if (digitalRead(2) == HIGH)
         {
-          //Serial.print('1');
-          counter++;
+          delay(del * delMul);
+          if (digitalRead(2) == LOW)
+          {
+            delay(del * delMul);
+            return true;
+          }
         }
-        delay(del);
-      }
-      if(counter >= delMul-4)
-      {
-        //Serial.print('1');
-        ch |= (1 << i);
-      }
-      else
-      { 
-        ch &= ~(1 << i);
       }
     }
-    if(ch != 0)
+  }
+}
+
+void readBits()
+{
+  byte counter = 0;
+  int bitCounter = 0;
+  int charCounter = 0;
+  while (true)
+  {
+    if (digitalRead(2) == HIGH)
     {
-      chars[charCount] = ch;
-      charCount++;
+      while (digitalRead(2) == HIGH)
+      {
+        counter++;
+        delay(del);
+      }
+      if (!handleReceivedBits(true, counter, bitCounter, charCounter))
+      {
+        return;
+      }
+      counter = 0;
+    }
+    else if (digitalRead(2) == LOW)
+    {
+      while (digitalRead(2) == LOW)
+      {
+        counter++;
+        delay(del);
+      }
+      if (!handleReceivedBits(false, counter, bitCounter, charCounter))
+      {
+        return;
+      }
+      counter = 0;
+    }
+  }
+}
+
+bool handleReceivedBits(bool bitType, byte counter, int& bitCounter, int& charCounter)
+{
+  byte readBits = counter / delMul;
+  if (counter % (delMul) >= delMul - 2)
+  {
+    readBits++;
+  }
+  for (byte i = 0; i < readBits; i++)
+  {
+    if (bitType == true)
+    {
+      bits[bitCounter] = 1;
     }
     else
     {
-      return;
-    }  
+      bits[bitCounter] = 0;
+    }
+    bitCounter++;
+    if (bitCounter % 8 == 0)
+    {
+      saveChar(bitCounter, charCounter);
+      if (chars[charCounter] == eot)
+      {
+        return false;
+      }
+      charCounter++;
+    }
+  }
+  return true;
+}
+
+void saveChar(int bitCounter, int charCounter)
+{
+  if (bitCounter == 0)
+  {
+    return;
+  }
+  int numberOfBit = bitCounter - 8;
+  if (charCounter == numChars)
+  {
+    chars[charCounter] = eot;
+    return;
+  }
+  for (byte i = 0; i < 8; i++)
+  {
+    if (bits[numberOfBit] == 1)
+    {
+      chars[charCounter] |= (1 << i);
+      numberOfBit++;
+    }
+    else
+    {
+      chars[charCounter] &= ~(1 << i);
+      numberOfBit++;
+    }
   }
 }
 
 void printChars()
 {
-  for(int i = 0; i < numChars; i++)
+  for (byte i = 0; i < numChars; i++)
   {
-    if(chars[i] == eot)
+    if (chars[i] == eot)
     {
       Serial.print("\n");
       return;
