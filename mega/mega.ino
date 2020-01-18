@@ -71,7 +71,7 @@ void sendBits()
   bool isEndReached = false;
   int i, j;
   sendPadding();
-  delayMicroseconds(1000);
+  delayMicroseconds(del);
   for (i = 0; i < numChars; i++)
   {
     if (chars[i] == eot)

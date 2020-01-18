@@ -10,16 +10,11 @@ const int numChars = 64;
 const int numBits = 8 * numChars;
 char chars[numChars];
 byte bits[numBits];
-unsigned long startTime;
-unsigned long stopTime;
 
 void loop() {
   if (paddingReceived())
   {
-    startTime = micros();
     readBits();
-    stopTime = micros();
-    Serial.println(stopTime - startTime);
     printChars();
   }
 }
