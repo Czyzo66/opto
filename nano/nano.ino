@@ -1,21 +1,25 @@
 void setup() {
-  // put your setup code here, to run once:
   pinMode(2, INPUT);
   Serial.begin(250000);
 }
 
-const int del = 1;      //delay
-const int delMul = 4;   //how many times larger is delay on transmitter
+const int del = 100;      //delayMicroseconds
+const int delMul = 10;   //how many times larger is delayMicroseconds on transmitter
 const char eot = 0x80;  //end of transmission
 const int numChars = 64;
 const int numBits = 8 * numChars;
 char chars[numChars];
 byte bits[numBits];
+unsigned long startTime;
+unsigned long stopTime;
 
 void loop() {
   if (paddingReceived())
   {
+    startTime = micros();
     readBits();
+    stopTime = micros();
+    Serial.println(stopTime - startTime);
     printChars();
   }
 }
@@ -26,16 +30,16 @@ bool paddingReceived()
   {
     if (digitalRead(2) == HIGH)
     {
-      delay(del * delMul);
+      delayMicroseconds(del * delMul);
       if (digitalRead(2) == LOW)
       {
-        delay(del * delMul);
+        delayMicroseconds(del * delMul);
         if (digitalRead(2) == HIGH)
         {
-          delay(del * delMul);
+          delayMicroseconds(del * delMul);
           if (digitalRead(2) == LOW)
           {
-            delay(del * delMul);
+            delayMicroseconds(del * delMul);
             return true;
           }
         }
@@ -56,7 +60,7 @@ void readBits()
       while (digitalRead(2) == HIGH)
       {
         counter++;
-        delay(del);
+        delayMicroseconds(del);
       }
       if (!handleReceivedBits(true, counter, bitCounter, charCounter))
       {
@@ -69,7 +73,7 @@ void readBits()
       while (digitalRead(2) == LOW)
       {
         counter++;
-        delay(del);
+        delayMicroseconds(del);
       }
       if (!handleReceivedBits(false, counter, bitCounter, charCounter))
       {
@@ -106,6 +110,7 @@ bool handleReceivedBits(bool bitType, byte counter, int& bitCounter, int& charCo
         return false;
       }
       charCounter++;
+      
     }
   }
   return true;

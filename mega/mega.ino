@@ -1,10 +1,9 @@
 void setup() {
-  // put your setup code here, to run once:
   pinMode(52, OUTPUT);
   Serial.begin(250000);
 }
 
-const int del = 4;     //delay
+const int del = 1000;     //delayMicroseconds
 const char eot = 0x80; //end of transmission
 const int numChars = 64;
 char chars[numChars];
@@ -31,7 +30,7 @@ void readFromConsole()
 {
   if (Serial.available())
   {
-    delay(1);
+    delay(5);
     readChars();
   }
   else
@@ -72,7 +71,7 @@ void sendBits()
   bool isEndReached = false;
   int i, j;
   sendPadding();
-  delay(del);
+  delayMicroseconds(1000);
   for (i = 0; i < numChars; i++)
   {
     if (chars[i] == eot)
@@ -84,12 +83,12 @@ void sendBits()
       if (chars[i] & (1 << j))
       {
         digitalWrite(52, HIGH);
-        delay(del);
+        delayMicroseconds(del);
       }
       else
       {
         digitalWrite(52, LOW);
-        delay(del);
+        delayMicroseconds(del);
       }
     }
     if (isEndReached)
@@ -106,8 +105,8 @@ void sendPadding()
   for (i = 0; i < 2; i++)
   {
     digitalWrite(52, HIGH);
-    delay(del);
+    delayMicroseconds(del);
     digitalWrite(52, LOW);
-    delay(del);
+    delayMicroseconds(del);
   }
 }
