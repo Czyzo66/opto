@@ -1,7 +1,7 @@
 void setup() {
   // put your setup code here, to run once:
   pinMode(2, INPUT);
-  Serial.begin(2000000);
+  Serial.begin(250000);
 }
 
 const int del = 1;      //delay
